@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white">Portfolio Overview</h2>
+        <p class="text-muted">Welcome back, {{ user.username }}</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white p-4 shadow h-100">
+            <h5>Total Net Worth</h5>
+            <h1 class="display-5 fw-bold">${{ "{:,.2f}".format(user.equity) }}</h1>
+            <small>Cash + Open Positions</small>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-dark text-white p-4 shadow h-100 position-relative overflow-hidden">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5>Available Cash</h5>
+                    <h3>${{ "{:,.2f}".format(user.wallet_balance) }}</h3>
+                    <small class="text-muted">Funds not invested</small>
+                </div>
+                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                    <i class="bi bi-wallet2"></i> Withdraw
+                </button>
+            </div>
+            <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card p-4 shadow h-100">
+            <h5>Live Performance (Open)</h5>
+            {% set total_pnl = 0 %}
+            {% for t in user.trades %}{% set total_pnl = total_pnl + t.current_pnl %}{% endfor %}
+            
+            <h3 class="{{ 'text-success' if total_pnl >= 0 else 'text-danger' }}">
+                ${{ "{:,.2f}".format(total_pnl) }}
+            </h3>
+            <small>Real-time market impact</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-md-8">
+        <div class="card p-3 mb-4 shadow-sm">
+            <h4>Performance Growth</h4>
+            
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="pnlChart"></canvas>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">Chart updates daily based on closing prices.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card p-3 shadow-sm h-100">
+            <h4 class="mb-3">Managed Assets</h4>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle text-nowrap">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Asset</th>
+                            <th class="text-end">Value / PnL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trade in user.trades %}
+                        <tr>
+                            <td>
+                                <strong>{{ trade.symbol }}</strong><br>
+                                <span class="badge bg-secondary">{{ trade.direction }}</span>
+                                <small class="text-muted">x{{ trade.quantity }}</small>
+                            </td>
+                            <td class="text-end">
+                                <div class="fw-bold">${{ "{:,.2f}".format(trade.entry_price) }}</div>
+                                <small class="{{ 'text-success' if trade.current_pnl >= 0 else 'text-danger' }}">
+                                    {{ "+" if trade.current_pnl >= 0 else "" }}{{ "{:,.2f}".format(trade.current_pnl) }}
+                                </small>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-5">
+                                No active investments.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="withdrawModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-bank me-2"></i>Request Withdrawal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div id="withdraw-step-1" class="modal-body p-4">
+                <p class="text-muted small mb-3">
+                    Withdrawals are processed via our secure manual gateway to ensure safety.
+                </p>
+                <div class="mb-3">
+                    <label class="fw-bold">Select Method</label>
+                    <select class="form-select mb-2">
+                        <option>Bitcoin (BTC)</option>
+                        <option>USDT (TRC20)</option>
+                        <option>Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Amount ($)</label>
+                    <input type="number" id="withdrawAmount" class="form-control" placeholder="0.00">
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Wallet Address / Acct Details</label>
+                    <input type="text" class="form-control" placeholder="Enter details...">
+                </div>
+                <button onclick="proceedWithdraw()" class="btn btn-primary w-100 py-2">Proceed to Gateway</button>
+            </div>
+
+            <div id="withdraw-step-2" class="modal-body p-4 text-center" style="display:none;">
+                <div class="mb-3">
+                    <i class="bi bi-shield-lock-fill text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5>Request Initiated</h5>
+                <p class="text-muted">
+                    Your withdrawal request for <strong id="displayAmount"></strong> has been generated. 
+                    <br><br>
+                    To finalize the release of funds, you must contact the <strong>Account Manager</strong> for verification.
+                </p>
+                
+                <div class="d-grid gap-2">
+                    <a href="https://wa.me/1234567890?text=Hello%20Admin,%20I%20want%20to%20withdraw%20funds%20from%20my%20dashboard." 
+                       target="_blank" class="btn btn-success">
+                        <i class="bi bi-whatsapp me-2"></i> Contact via WhatsApp
+                    </a>
+                    
+                    <a href="mailto:admin@tradesim.com?subject=Withdrawal%20Request" 
+                       class="btn btn-outline-dark">
+                        <i class="bi bi-envelope me-2"></i> Contact via Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- Chart Logic ---
+    const ctx = document.getElementById('pnlChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Today'],
+            datasets: [{
+                label: 'Portfolio Value',
+                data: [
+                    {{ user.wallet_balance * 0.95 }}, 
+                    {{ user.wallet_balance * 0.98 }}, 
+                    {{ user.wallet_balance * 0.97 }}, 
+                    {{ user.wallet_balance * 1.01 }}, 
+                    {{ user.wallet_balance * 1.02 }}, 
+                    {{ user.equity }}
+                ],
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // <--- THIS FIXES THE MOBILE HEIGHT ISSUE
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { display: false } } // Hide x-axis labels on small screens if needed
+            }
+        }
+    });
+
+    // --- Withdrawal Modal Logic ---
+    function proceedWithdraw() {
+        let amount = document.getElementById('withdrawAmount').value;
+        if (!amount || amount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+        
+        // Hide Step 1, Show Step 2
+        document.getElementById('withdraw-step-1').style.display = 'none';
+        document.getElementById('withdraw-step-2').style.display = 'block';
+        
+        // Update the text with the amount they typed
+        document.getElementById('displayAmount').innerText = "$" + amount;
+    }
+</script>
+{% endblock %}

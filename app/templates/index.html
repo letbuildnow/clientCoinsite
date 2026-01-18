@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* 1. Override Global Background for a Deep Purple Gradient */
+    body {
+        background: radial-gradient(circle at 30% 30%, #2e1065 0%, #020617 100%) !important;
+        color: #ffffff !important;
+        overflow-x: hidden;
+        /* Prevent scrollbar from 3D elements */
+    }
+
+    /* 2. Transparent Navbar for the "blended" look */
+    .navbar {
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* 3. The "Pink/Orange" Gradient Text */
+    .text-gradient {
+        background: linear-gradient(90deg, #ff8a00 0%, #e52e71 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+
+    /* 4. The Hero Section Layout */
+    .hero-section {
+        min-height: 85vh;
+        /* Takes up most of the screen */
+        display: flex;
+        align-items: center;
+        padding-top: 2rem;
+    }
+
+    /* 5. The Phone Mockup Animation */
+    .phone-container {
+        position: relative;
+        perspective: 1000px;
+    }
+
+    .phone-mockup {
+        width: 100%;
+        max-width: 450px;
+        transform: rotateY(-15deg) rotateX(5deg);
+        /* Tilted 3D effect */
+        box-shadow: -20px 20px 50px rgba(0, 0, 0, 0.5);
+        /* Deep Shadow */
+        border-radius: 40px;
+        border: 8px solid #333;
+        /* Phone Frame */
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .phone-mockup:hover {
+        transform: rotateY(0deg) rotateX(0deg);
+        /* Straighten on hover */
+    }
+
+    .logo-glow {
+        color: #ff9f43;
+        text-shadow: 0 0 20px rgba(255, 159, 67, 0.5);
+    }
+</style>
+
+<div class="hero-section">
+    <div class="row align-items-center w-100">
+
+        <div class="col-lg-6 ps-lg-5">
+            <div class="d-flex align-items-center mb-3">
+
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" height="30"
+                    class="d-inline-block align-text-top me-2">
+                <span class="fw-bold fs-4 text-white">CoinStats Recovery</span>
+            </div>
+
+            <h1 class="display-3 fw-bolder mb-4" style="line-height: 1.1;">
+                TRACK ALL YOUR <br>
+                <span class="text-gradient">ASSETS</span> IN ONE PLACE
+            </h1>
+
+            <p class="lead text-white-50 mb-5" style="max-width: 500px;">
+                Manage your simulated portfolio with institutional-grade analytics.
+                Real-time tracking for Crypto, Stocks, and Forex.
+            </p>
+
+            <div class="d-flex gap-3">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('user.dashboard') }}" class="btn btn-light btn-lg px-5 rounded-pill fw-bold">
+                    Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5 rounded-pill fw-bold">
+                    Redeem Invite
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                    Login
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="mt-5 text-white-50 small">
+                <i class="bi bi-check-circle-fill text-success me-2"></i> Private Invite Only &nbsp;&nbsp;
+                <i class="bi bi-check-circle-fill text-success me-2"></i> Real-Time Data
+            </div>
+        </div>
+
+        <div class="col-lg-6 text-center phone-container d-none d-lg-block">
+            <img src="{{ url_for('static', filename='img/dashboard-mobile.png') }}" class="phone-mockup img-fluid">
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white bg-dark p-3 rounded d-flex justify-content-between align-items-center">
+            Admin Control Center
+            <span class="fs-6 text-muted">Superuser Access</span>
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-3 mb-4 shadow-sm border-0">
+            <h4 class="text-primary"><i class="bi bi-key"></i> Generate Invite</h4>
+            <p class="text-muted small">Create a code to fund a new account.</p>
+            <form action="{{ url_for('admin.generate_code') }}" method="POST">
+                <div class="mb-3">
+                    <label class="fw-bold">Starting Balance ($)</label>
+                    <input type="number" name="amount" class="form-control" placeholder="50000" step="1000" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Generate Code</button>
+            </form>
+        </div>
+
+        <div class="card p-3 shadow-sm border-0">
+            <h4>Active Codes</h4>
+            <ul class="list-group list-group-flush">
+                {% for code in codes %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="fw-bold text-dark">{{ code.code }}</span><br>
+                        <small class="text-success">${{ "{:,.0f}".format(code.balance_value) }}</small>
+                    </div>
+                    <div>
+                        {% if code.is_used %}
+                            <span class="badge bg-secondary">USED</span>
+                        {% else %}
+                            <span class="badge bg-success">ACTIVE</span>
+                            <a href="{{ url_for('admin.delete_code', code_id=code.id) }}" class="text-danger ms-2" title="Delete Code" onclick="return confirm('Delete this code?')">&times;</a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center">No codes generated yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card p-3 shadow-sm border-0">
+            <h4 class="text-primary mb-3">User Management</h4>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Cash Balance</th>
+                            <th>Total Equity</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ u.username }}</strong><br>
+                                <span class="badge bg-light text-dark border">User</span>
+                            </td>
+                            <td>${{ "{:,.2f}".format(u.wallet_balance) }}</td>
+                            <td class="text-primary fw-bold">${{ "{:,.2f}".format(u.equity) }}</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="openTradeModal('{{ u.id }}', '{{ u.username }}')" title="Place Trade">
+                                        Trade
+                                    </button>
+                                    
+                                    <button class="btn btn-sm btn-outline-success" onclick="openFundModal('{{ u.id }}', '{{ u.username }}')" title="Manage Funds">
+                                        Funds
+                                    </button>
+                                    
+                                    <button class="btn btn-sm btn-outline-warning" onclick="openPasswordModal('{{ u.id }}', '{{ u.username }}')" title="Reset Password">
+                                        Pwd
+                                    </button>
+                                    
+                                    <a href="{{ url_for('admin.delete_user', user_id=u.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Permanently delete {{ u.username }}?')">
+                                        Del
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No users found. Generate a code to invite someone.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Open Position for <span id="tradeModalUsername"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('admin.place_trade_for_user') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="user_id" id="tradeModalUserId">
+                    <div class="mb-3">
+                        <label>Asset Symbol (e.g. BTC-USD)</label>
+                        <input type="text" name="symbol" class="form-control" placeholder="BTC-USD" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label>Direction</label>
+                            <select name="direction" class="form-select">
+                                <option value="BUY">BUY (Long)</option>
+                                <option value="SELL">SELL (Short)</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label>Quantity</label>
+                            <input type="number" name="quantity" class="form-control" value="1.0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="alert alert-info small">
+                        Price will be fetched automatically from live market data.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Execute Trade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="fundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Manage Funds: <span id="fundModalUsername"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('admin.update_balance') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="user_id" id="fundModalUserId">
+                    <div class="mb-3">
+                        <label>Action Type</label>
+                        <select name="type" class="form-select">
+                            <option value="DEPOSIT">Add Funds (Deposit)</option>
+                            <option value="WITHDRAWAL">Remove Funds (Withdraw)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Amount ($)</label>
+                        <input type="number" name="amount" class="form-control" placeholder="0.00" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Update Balance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Reset Password for <span id="pwdModalUsername"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('admin.reset_password') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="user_id" id="pwdModalUserId">
+                    <div class="mb-3">
+                        <label>New Password</label>
+                        <input type="text" name="new_password" class="form-control" placeholder="Enter new password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openTradeModal(id, name) {
+    document.getElementById('tradeModalUserId').value = id;
+    document.getElementById('tradeModalUsername').innerText = name;
+    new bootstrap.Modal(document.getElementById('tradeModal')).show();
+}
+
+function openFundModal(id, name) {
+    document.getElementById('fundModalUserId').value = id;
+    document.getElementById('fundModalUsername').innerText = name;
+    new bootstrap.Modal(document.getElementById('fundModal')).show();
+}
+
+function openPasswordModal(id, name) {
+    document.getElementById('pwdModalUserId').value = id;
+    document.getElementById('pwdModalUsername').innerText = name;
+    new bootstrap.Modal(document.getElementById('passwordModal')).show();
+}
+</script>
+
+{% endblock %}

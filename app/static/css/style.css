@@ -1,0 +1,162 @@
+/* --- GLOBAL VARIABLES --- */
+:root {
+    --primary-color: #0f172a; /* Dark Navy */
+    --accent-color: #3b82f6;   /* Bright Blue */
+    --success-color: #10b981;  /* Emerald Green */
+    --danger-color: #ef4444;   /* Red */
+    --bg-color: #f8fafc;       /* Very Light Grey */
+    --card-bg: #ffffff;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- NAVIGATION BAR --- */
+.navbar {
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--accent-color) !important;
+}
+
+/* --- CARDS (DASHBOARD WIDGETS) --- */
+.card {
+    border: none;
+    border-radius: 12px;
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Hover effect only for interactive cards (optional) */
+.card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card h5 {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+/* --- FINANCIAL TEXT --- */
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.display-5 {
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+/* --- TABLES --- */
+.table thead th {
+    background-color: #f1f5f9;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* --- BUTTONS & INPUTS --- */
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb; /* Darker Blue */
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-color);
+}
+
+/* --- LOGIN/REGISTER PAGES --- */
+.login-card-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1e293b 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 2rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    /* 1. Fix Horizontal Scrolling */
+    body, html {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    /* 2. Shrink Big Text on Homepage */
+    .display-3 {
+        font-size: 2.5rem !important; /* Smaller title */
+        word-wrap: break-word;
+    }
+    
+    .lead {
+        font-size: 1rem !important;
+    }
+
+    /* 3. Adjust Card Spacing */
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    /* 4. Fix Navbar Text */
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card p-4">
+            
+            <div id="step-1">
+                <h3 class="text-center">Enter Access Code</h3>
+                <p class="text-center text-muted">You need an invite code to join.</p>
+                <div class="mb-3">
+                    <input type="text" id="access_code" class="form-control text-center text-uppercase" placeholder="XXXX-XXXX-XXXX">
+                </div>
+                <button onclick="verifyCode()" class="btn btn-success w-100">Verify Code</button>
+                <p id="error-msg" class="text-danger text-center mt-2"></p>
+            </div>
+
+            <div id="step-2" style="display:none;">
+                <h3 class="text-center text-success">Code Accepted!</h3>
+                <div class="alert alert-success text-center">
+                    Starting Balance: <strong>$<span id="display-balance"></span></strong>
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="valid_code" id="hidden_code">
+                    <div class="mb-3">
+                        <label>Choose Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Choose Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function verifyCode() {
+    let code = document.getElementById("access_code").value;
+    
+    // Call the API we wrote in routes_auth.py
+    fetch('/api/verify-code', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ code: code })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            document.getElementById("step-1").style.display = "none";
+            document.getElementById("step-2").style.display = "block";
+            document.getElementById("display-balance").innerText = data.amount;
+            document.getElementById("hidden_code").value = code;
+        } else {
+            document.getElementById("error-msg").innerText = "Invalid or Used Code";
+        }
+    });
+}
+</script>
+{% endblock %}
